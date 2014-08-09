@@ -1,0 +1,44 @@
+/achievement give <stat_name> [player]
+/ban <name> [reason ...]
+/ban-ip <address|name> [reason ...]
+/banlist [ips|players]
+/clear <player> [item] [data]
+/debug <start|stop>
+/defaultgamemode <mode>
+/deop <player>
+/difficulty <new difficulty>
+/effect <player> <effect> [seconds] [amplifier]
+/enchant <player> <enchantment ID> [level]
+/gamemode <mode> [player]
+/gamerule <rule name> <value> OR /gamerule <rule name>
+/give <player> <item> [amount] [data] [dataTag]
+/help [page|command name]
+/kick <player> [reason ...]
+/kill
+/list
+/me <action ...>
+/list
+/op <player>
+/pardon <name>
+/pardon-ip <address>
+/playsound <sound> <player> [x] [y] [z] [volume] [pitch] [minimumVolume]
+/save-all
+/save-off
+/save-on
+/say <message ...>
+/scoreboard <objectives|players|teams>
+/seed
+/setblock <x> <y> <z> <TileName> [dataValue] [oldBlockHandling] [dataTag]
+/setidletimeout <Minutes until kick>
+/setworldspawn OR /setworldspawn <x> <y> <z>
+/spawnpoint OR /spawnpoint <player> OR /spawnpoint <player> <x> <y> <z>
+/spreadplayers <x> <z> <spreadDistance> <maxRange> <respectTeams true|false> <player ...>
+/stop
+/summon <EntityName> [x] [y] [z] [dataTag]
+/tell <player> <private message ...>
+/tellraw <player> <raw json message>
+/testfor <player>
+/testforblock <x> <y> <z> <TileName> [dataValue] [dataTag]
+/time <set|add> <value>
+/whitelist <on|off|list|add|remove|reload>
+/xp <amount> [player] OR /xp <amount>L [player]
