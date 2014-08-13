@@ -42,3 +42,5 @@
 /time <set|add> <value>
 /whitelist <on|off|list|add|remove|reload>
 /xp <amount> [player] OR /xp <amount>L [player]
+
+http://minecraft.gamepedia.com/Commands
