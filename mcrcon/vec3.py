@@ -50,6 +50,11 @@ class Vec3:
     def __iter__(self):
         return iter((self.x, self.y, self.z))
 
+    ####################################################################
+    #
+    def __str__(self):
+        return "%s %s %s" % (self.x, self.y, self.z)
+
     def _map(self, func):
         self.x = func(self.x)
         self.y = func(self.y)

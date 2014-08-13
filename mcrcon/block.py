@@ -41,7 +41,7 @@ class Block:
         this 'data' is in that list, we will copy that name otherwise
         the name will be set to something else..
         """
-        return Block(self.id, data)
+        return Block(self.id, name=str(data), data=data)
 
     ####################################################################
     #

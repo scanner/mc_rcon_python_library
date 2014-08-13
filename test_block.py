@@ -31,9 +31,10 @@ def main():
 
     print "Connecting..."
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
-    res = mc.set_block((-5, 73, -193), block.AIR)
-    res = mc.set_block((-5, 73, -194), block.AIR)
-    print "Result: %s" % res
+    # res = mc.set_block((-5, 73, -193), block.AIR)
+    # res = mc.set_block((-5, 73, -194), block.AIR)
+    mc.set_blocks((-20, 72, -191), (-40, 72, -191), block.AIR)
+    # print "Result: %s" % res
 
     return
 

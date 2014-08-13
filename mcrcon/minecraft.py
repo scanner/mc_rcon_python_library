@@ -294,6 +294,7 @@ class Minecraft(object):
         Keyword Arguments:
         message --
         """
+        self.conn.send("say %s" % message)
         return
 
     ####################################################################
@@ -363,6 +364,33 @@ class Minecraft(object):
                               replace - The old block drops neither itself
                                          nor any contents. Plays no sound.
         """
+        # Since the cuboid is inclusive from coords0 to coords1 we need to
+        # make sure the ranges we generate run the full gamut of numbers.
+        #
+        x0, y0, z0 = coords0
+        x1, y1, z1 = coords1
+
+        ####################################################################
+        #
+        def c_range(i, j):
+            """
+            Range the two values so we produce an inclusive range()
+            """
+            i = int(i)
+            j = int(j)
+            if i > j:
+                i += 1
+                for k in range(j, i):
+                    yield k
+            else:
+                j += 1
+                for k in range(i, j):
+                    yield k
+
+        for y in c_range(y0, y1):
+            for z in c_range(z0, z1):
+                for x in c_range(x0, x1):
+                    self.set_block((x, y, z), block, old_block_handling)
         return
 
     ####################################################################
