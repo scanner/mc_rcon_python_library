@@ -348,10 +348,21 @@ class Minecraft(object):
         """
         Set a cuboid of blocks (x0,y0,z0),(x1,y1,z1),block
 
+        We start at x0, y0, z0 (always), doing an x/z layer at a time
+        before moving to the next y layer.
+
+        If y0 > y1 this means we build from top to bottom - which may be
+        important for erasing an existing structure by using AIR blocks.
+
+        However, if you are placing blocks that experience gravity like
+        gravel or sand you are going to want to make sure that you start
+        with y0 <= y1.. otherwise some of your blocks may fall from above
+        in to the empty space below that has not been filled yet.
+
         Keyword Arguments:
-        coords0             --
-        coords1             --
-        block               --
+        coords0             -- one corner of a cuboid
+        coords1             -- the other corner of a cuboid
+        block               -- the block class instance to fill with
         old_block_handling  -- (default "replace") Specifies how to handle the
                               block change. Must be one of:
 
@@ -374,23 +385,49 @@ class Minecraft(object):
         #
         def c_range(i, j):
             """
-            Range the two values so we produce an inclusive range()
+            Range the two values so we produce an inclusive range().
+            Automatically deal with i > j by stepping backwards. This
+            lets people decide if they want to build bottom up or top
+            down, etc.
             """
             i = int(i)
             j = int(j)
             if i > j:
-                i += 1
-                for k in range(j, i):
+                for k in range(i, j-1, -1):
                     yield k
             else:
-                j += 1
-                for k in range(i, j):
+                for k in range(i, j+1):
                     yield k
-
+        #
+        ####################################################################
         for y in c_range(y0, y1):
             for z in c_range(z0, z1):
                 for x in c_range(x0, x1):
                     self.set_block((x, y, z), block, old_block_handling)
+        return
+
+    ####################################################################
+    #
+    def set_blocks_from_sparsevolume(self, coords, sv,
+                                     old_block_handling="replace"):
+        """
+        Given a SparseVolume set blocks according to its content, where the
+        sparse volume will be rooted at the given coordinates.
+
+        The new blocks will be filled y layer at a time moving up. This
+        is so that gravity affected blocks like sand and gravel in the
+        SparseVolume are laid out correctly.
+
+        Keyword Arguments:
+        coords --
+        sv     --
+        """
+        x, y, z = coords
+        for iy in range(sv.height):
+            for ix in range(sv.width):
+                for iz in range(sv.depth):
+                    self.set_block((x+ix, y+iy, z+iz), sv.get((ix, iy, iz)),
+                                   old_block_handling=old_block_handling)
         return
 
     ####################################################################
