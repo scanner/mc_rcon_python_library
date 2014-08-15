@@ -13,23 +13,49 @@
 class Block:
     """Minecraft PI block description. Can be sent to Minecraft.setBlock/s"""
 
+    defined_blocks = {}
+
     ####################################################################
     #
     def __init__(self, text_id, name, data=0, data_tag=None):
         self.id = text_id
         self.name = name
-        self.data = data
+        self._data = data
         self.data_tag = data_tag
+        self.id_hash = hash(self.id + ':' + str(self._data))
+        self.defined_blocks[(self.id, self._data)] = self
 
     ####################################################################
     #
-    def __cmp__(self, rhs):
-        return hash(self) - hash(rhs)
+    @property
+    def data(self):
+        return self._data
+
+    ####################################################################
+    #
+    @classmethod
+    def lookup(cls, id, data):
+        """
+        Keyword Arguments:
+        id   --
+        data --
+        """
+        return cls.defined_blocks[(id, data)]
+
+    ####################################################################
+    #
+    def __eq__(self, rhs):
+        return hash(self) == hash(rhs)
+
+    ####################################################################
+    #
+    def __ne__(self, rhs):
+        return hash(self) != hash(rhs)
 
     ####################################################################
     #
     def __hash__(self):
-        return self.id + str(self.data)
+        return self.id_hash
 
     ####################################################################
     #
@@ -52,15 +78,12 @@ class Block:
     ####################################################################
     #
     def __repr__(self):
-        return "Block(%s, %d)" % (self.id, self.data)
+        return "Block(%s, %d)" % (repr(self.id), self.data)
 
     ####################################################################
     #
     def __str__(self):
-        if self.data == 0:
-            return "%s" % self.id
-        else:
-            return "%s %d" % (self.id, self.data)
+        return self.name
 
 AIR = Block('minecraft:air', 'Air')
 STONE = Block('minecraft:stone', 'Stone')
@@ -201,6 +224,10 @@ LIT_FURNACE = Block('minecraft:lit_furnace', 'Burning Furnace')
 STANDING_SIGN = Block('minecraft:standing_sign', 'Standing Sign Block')
 WOODEN_DOOR = Block('minecraft:wooden_door', 'Wooden Door Block')
 LADDER = Block('minecraft:ladder', 'Ladder')
+LADDER_N = LADDER
+LADDER_S = Block('minecraft:ladder', 'Ladder', data=1)
+LADDER_E = Block('minecraft:ladder', 'Ladder', data=2)
+LADDER_W = Block('minecraft:ladder', 'Ladder', data=3)
 RAIL = Block('minecraft:rail', 'Rail')
 STONE_STAIRS = Block('minecraft:stone_stairs', 'Cobblestone Stairs')
 WALL_SIGN = Block('minecraft:wall_sign', 'Wall-mounted Sign Block')
