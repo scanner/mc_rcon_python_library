@@ -40,6 +40,6 @@ try:
     while True:
         line = raw_input('Rcon: ')
         print r.send(line)
-except KeyboardInterrupt, e:
+except EOFError:
     readline.write_history_file(histfile)
     r.close()
