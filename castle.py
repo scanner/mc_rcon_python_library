@@ -50,10 +50,10 @@ class CastleBuilder(object):
     #
     def build(self):
         print "Create ground and moat"
-        self.CreateLandscape(34, 36, 27)
+        self.CreateLandscape(25, 25, 21)
 
         # print "Create outer walls"
-        self.CreateWalls(27, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
+        self.CreateWalls(21, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
                          True)
 
         # print "Create inner walls"
@@ -149,7 +149,7 @@ class CastleBuilder(object):
 
     ####################################################################
     #
-    def CreateLandscape(self, moatwidth, moatdepth, islandwidth):
+    def CreateLandscape(self, moatwidth=34, moatdepth=36, islandwidth=21):
         # Set everything above our base layer to air
         #
         x0 = round(self.x - (moatwidth/2))
@@ -303,7 +303,11 @@ def main():
     # coords = (-31, 70, -203)
     # coords = (-189, 89, -120)
     # coords = (-439, 86, -47)
-    coords = (-101, 64, -380)
+    # coords = (-101, 64, -380)
+    # coords = (-499, 73, -655)
+    # coords = (560, 64, -281)
+    # coords = (966, 137, -434)
+    coords = (1264, 74, -255)
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
 
     mc.say("Let's build a castle!")
