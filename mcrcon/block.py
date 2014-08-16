@@ -3,13 +3,22 @@
 # File: $Id$
 #
 """
+Minecraft blocks
 
+XXX We currently have entities and items mixed in here.. we need to
+    separate those out in to their own modules.
+
+XXX we probably should separate out the data ids too (or have data ids
+    in each of the separate entity, block modules..
 """
 
 # system imports
 #
 
 
+########################################################################
+########################################################################
+#
 class Block:
     """Minecraft PI block description. Can be sent to Minecraft.setBlock/s"""
 
@@ -29,13 +38,37 @@ class Block:
     #
     @property
     def data(self):
+        """
+        XXX This should return the interpreted data type associated with
+            this block? Like N/S/E/W for things like ladders and stairs,
+            color for wool, glass, carpet.
+
+            and with that we should rename the parameter "data" and
+            perhaps call this "data_value" (or vice versa.)
+        """
         return self._data
+
+    ####################################################################
+    #
+    @classmethod
+    def create(cls, id, data):
+        """
+        Basically a wrapper for creating a block.. but if we already
+        created one with this id & data, then return the already
+        created one.
+        """
+        if (id, data) not in cls.defined_blocks:
+            cls(id, data)
+        return cls.defined_blocks[(id, data)]
 
     ####################################################################
     #
     @classmethod
     def lookup(cls, id, data):
         """
+        Lookup block if it already exists (fail with key error exception
+        if it does not.)
+
         Keyword Arguments:
         id   --
         data --
@@ -84,6 +117,15 @@ class Block:
     #
     def __str__(self):
         return self.name
+
+    ####################################################################
+    #
+    @property
+    def command_output(self):
+        """
+        Output the block as a string we can send to the server
+        """
+        return "%s %d" % (self.id, self.data)
 
 AIR = Block('minecraft:air', 'Air')
 STONE = Block('minecraft:stone', 'Stone')
