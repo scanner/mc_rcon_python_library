@@ -7,6 +7,9 @@ Our API for manipulating the minecraft server through rcon. We
 expose the commands that minecraft supports over rcon as methods on a
 class.
 
+List of commands and explanations gleaned and copied from:
+http://minecraft.gamepedia.com/Commands
+
 """
 
 # system imports
@@ -19,8 +22,8 @@ import math
 # our module imports
 #
 import mcrcon
+import block
 from util import flatten
-from vec3 import Vec3
 
 SURVIVAL = 'survival'
 CREATIVE = 'creative'
@@ -39,6 +42,44 @@ BLOCK_REPLACE = "replace"
 #
 def intFloor(*args):
     return [int(math.floor(x)) for x in flatten(args)]
+
+
+########################################################################
+########################################################################
+#
+class MCException(Exception):
+    def __init__(self, msg):
+        super(MCException, self).__init__(msg)
+
+
+########################################################################
+########################################################################
+#
+class OutsideLoadedWorld(MCException):
+    def __init__(self, msg):
+        super(OutsideLoadedWorld, self).__init__(
+            "Block outside of the loaded world: " + msg
+        )
+
+
+########################################################################
+########################################################################
+#
+class PlayerCannotBeFound(MCException):
+    def __init__(self, msg):
+        super(PlayerCannotBeFound, self).__init__(
+            "Player cannot be found: " + msg
+        )
+
+
+########################################################################
+########################################################################
+#
+class UnhandledResponse(MCException):
+    def __init__(self, msg):
+        super(UnhandledResponse, self).__init__(
+            "Unexpected response from minecraft server: " + msg
+        )
 
 
 ########################################################################
@@ -70,31 +111,61 @@ class Minecraft(object):
 
     ####################################################################
     #
-    def set_achievment(self, achievment, player):
+    def set_achievement(self, achievement, player):
         """
         Keyword Arguments:
         achievment --
         player     --
         """
-        pass
+        res = self.conn.send("achievement give %s %s" %
+                             (achievement.command_output, player))
+        if res == "That player cannot be found":
+            raise PlayerCannotBeFound(player)
+        return res
 
     ####################################################################
     #
-    def ban_player(self, player):
+    def ban_player(self, player, reason=None):
         """
+        These commands manage a server banlist. The server banlist is a
+        list of players or IP addresses that will not be allowed to
+        connect to the server. Bans supersede any whitelisting in
+        place.
+
         Keyword Arguments:
         player --
         """
-        pass
+        if reason:
+            res = self.conn.send("ban %s" % player)
+        else:
+            res = self.conn.send("ban %s %s" % (player, reason))
+
+        if res == "Could not ban player Bibble":
+            raise PlayerCannotBeFound(res)
+
+        return res
 
     ####################################################################
     #
-    def ban_ip(self, ip_address):
+    def ban_ip(self, address, reason):
         """
+        Adds IP address to banlist. The address can be a player name or an
+        IP address (if it is a player it bans the IP that the player
+        is connecting from)
+
         Keyword Arguments:
         ip_address --
         """
-        pass
+        if reason:
+            res = self.conn.send("ban %s" % address)
+        else:
+            res = self.conn.send("ban %s %s" % (address, reason))
+
+        if res == "You have entered an invalid IP address or a player " \
+                  "that is not online":
+            raise ValueError(res)
+
+        return res
 
     ####################################################################
     #
@@ -108,12 +179,28 @@ class Minecraft(object):
     #
     def clear(self, player, item=None, data=None):
         """
+        Clears items from player inventory.
+
+        If the item's 'data' is 0
         Keyword Arguments:
         player --
         item   -- (default None)
         data   -- (default None)
         """
-        return
+        if item is None:
+            res = self.conn.send("clear %s" % player)
+        elif data is None:
+            res = self.conn.send("clear %s %s" % (player,
+                                                  item.command_output))
+        else:
+            res = self.conn.send("clear %s %s" % (player,
+                                                  item.id,
+                                                  data.command_output))
+
+        if res == "That player cannot be found":
+            raise PlayerCannotBeFound(player)
+
+        return res
 
     ####################################################################
     #
@@ -338,7 +425,14 @@ class Minecraft(object):
         res = self.conn.send("setblock %d %d %d %s" % (coords[0],
                                                        coords[1],
                                                        coords[2],
-                                                       block))
+                                                       block.command_output))
+        if res == "Cannot place block outside of the world":
+            raise OutsideLoadedWorld(
+                "%s at (%d,%d,%d)" % (block, coords[0], coords[1], coords[2])
+            )
+        if res != "Block placed":
+            raise UnhandledResponse(res)
+
         return res
 
     ####################################################################
@@ -512,20 +606,22 @@ class Minecraft(object):
 
     ####################################################################
     #
-    def test_for_player(self, player):
-        """
-        Keyword Arguments:
-        player --
-        """
-        return
-
-    ####################################################################
-    #
     def get_block(self, coords):
         """
+        Get the block at the given coordinates
+
         Keyword Arguments:
         coords     --
         """
+        coords = intFloor(coords)
+        res = self.conn.send("testforblock %d %d %d %s" % (coords[0],
+                                                           coords[1],
+                                                           coords[2],
+                                                           block.AIR))
+
+        if res == "Cannot test for block outside of the world":
+            raise OutsideLoadedWorld("(%d,%d,%d)" % coords)
+
         return
 
     ####################################################################
