@@ -430,7 +430,7 @@ class Minecraft(object):
             raise OutsideLoadedWorld(
                 "%s at (%d,%d,%d)" % (block, coords[0], coords[1], coords[2])
             )
-        if res != "Block placed":
+        if res not in ("Block placed", "The block couldn't be placed"):
             raise UnhandledResponse(res)
 
         return res
