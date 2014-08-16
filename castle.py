@@ -33,31 +33,34 @@ class CastleBuilder(object):
 
     ####################################################################
     #
-    def __init__(self, mc, coords):
+    def __init__(self, mc, coords, num_floors):
         """
         Coordinates are the ground floor, center of the finished castle
         """
         self.center_coords = coords
-        self.x = coords[0]
-        self.y = coords[1]
-        self.z = coords[2]
+        (self.x, self.y, self.z) = coords
+        # We were given the coordinates of where the player was
+        # standing and the ground floor for our building is the one
+        # beneath their feet.
+        #
+        self.y -= 1
         self.floor_height = 4
-        self.num_floors = 4
-        self.keep_height = (self.floor_height * (self.num_floors+1)) + 1
+        self.num_floors = num_floors
+        self.keep_height = (self.floor_height * (self.num_floors+2)) + 3
         self.mc = mc
 
     ####################################################################
     #
     def build(self):
-        print "Create ground and moat"
-        self.CreateLandscape(25, 25, 21)
+        # print "Create ground and moat"
+        self.CreateLandscape(33, 21)
 
         # print "Create outer walls"
-        self.CreateWalls(21, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
-                         True)
+        self.CreateWalls(19, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
+                         True, True, True)
 
         # print "Create inner walls"
-        # self.CreateWalls(16, 5, block.BRICK_BLOCK, True, True)
+        # self.CreateWalls(15, 5, block.BRICK_BLOCK, True, True, True)
 
         print "Create Keep with 5 levels"
         self.CreateKeep(9, 5)
@@ -87,7 +90,7 @@ class CastleBuilder(object):
     #
     def CreateWalls(self, size, height, material,
                     battlements=None,
-                    walkway=True, torches=True):
+                    walkway=True, torches=True, door=False):
         # Create 4 walls with a specified width, height and material.
         # Battlements and walkways can also be added to the top edges.
         x0 = round(self.x - (size/2))
@@ -147,55 +150,99 @@ class CastleBuilder(object):
                     self.mc.set_block((x1+1, y1-1, z0+i), block.TORCH)
                     self.mc.set_block((x0+i, y1-1, z0-1), block.TORCH)
 
+        # door..
+        #
+        if door is True:
+            self.mc.set_block((x0, self.y+1, self.z),
+                              block.WOODEN_DOOR.withData(0))
+            self.mc.set_block((x0, self.y+2, self.z),
+                              block.WOODEN_DOOR.withData(8))
+            self.mc.set_block((x0-1, self.y+3, self.z), block.TORCH)
+            self.mc.set_block((x0+1, self.y+3, self.z), block.TORCH)
+            self.mc.set_block((x0-1, self.y, self.z), block.STONE)
+
     ####################################################################
     #
-    def CreateLandscape(self, moatwidth=34, moatdepth=36, islandwidth=21):
-        # Set everything above our base layer to air
-        #
-        x0 = round(self.x - (moatwidth/2))
-        z0 = round(self.z - (moatdepth/2))
-        x1 = round(self.x + (moatwidth/2))
-        z1 = round(self.z + (moatdepth/2))
+    def CreateLandscape(self, outer_border=36, islandwidth=21):
 
-        xi0 = round(self.x - (islandwidth/2))
-        zi0 = round(self.z - (islandwidth/2))
-        xi1 = round(self.x + (islandwidth/2))
-        zi1 = round(self.z + (islandwidth/2))
+        # x, z coordinates for our outer border. This is the extent of
+        # what will be cleared.
+        #
+        xb0 = round(self.x - (outer_border/2))
+        zb0 = round(self.z - (outer_border/2))
+        xb1 = round(self.x + (outer_border/2))
+        zb1 = round(self.z + (outer_border/2))
+
+        # x, z coordinates for the fence - it is 3 spaces in from the border.
+        #
+        #
+        x0 = round(self.x - ((outer_border/2)-3))
+        z0 = round(self.z - ((outer_border/2)-3))
+        x1 = round(self.x + ((outer_border/2)-3))
+        z1 = round(self.z + ((outer_border/2)-3))
+
+        # # Where the 'island' is. This is the grassy court.
+        # #
+        # xi0 = round(self.x - (islandwidth/2))
+        # zi0 = round(self.z - (islandwidth/2))
+        # xi1 = round(self.x + (islandwidth/2))
+        # zi1 = round(self.z + (islandwidth/2))
+
         print "Clearing space"
-        self.mc.set_blocks((x0-1, self.y+self.keep_height, z0-1),
-                           (x1+1, self.y, z1+1),
-                           block.AIR)
+        self.mc.set_blocks((xb0, self.y+self.keep_height, zb0),
+                           (xb1, self.y+1, zb1), block.AIR)
 
         # Set 2 layers beneath our base to grass, and then dirt.
         #
-        print "Creating grass and dirt base"
-        self.mc.set_blocks((x0-1, self.y-2, z0-1), (x1+1, self.y-2, z1+1),
+        print "Creating grass and dirt base centered at: (%d, %d, %d)" % \
+            (self.x, self.y, self.z)
+        print "         Outer x/z: (%d, %d) to (%d, %d)" % (x0, z0, z1, z1)
+        self.mc.set_blocks((x0, self.y-1, z0), (x1, self.y-2, z1),
                            block.DIRT)
-        self.mc.set_blocks((x0-1, self.y-1, z0-1), (x1+1, self.y-1, z1+1),
+        self.mc.set_blocks((x0, self.y, z0), (x1, self.y-1, z1),
                            block.GRASS)
 
         # Create border around moat
         #
-        self.mc.set_blocks((x0-1, self.y, z0-1),
-                           (x0-1, self.y, z1+1),
-                           block.GRASS)
-        self.mc.set_blocks((x0-1, self.y, z1+1),
-                           (x1+1, self.y, z1+1),
-                           block.GRASS)
-        self.mc.set_blocks((x1+1, self.y, z0-1),
-                           (x1+1, self.y, z1+1),
-                           block.GRASS)
-        self.mc.set_blocks((x0-1, self.y, z0-1),
-                           (x1+1, self.y, z0-1),
-                           block.GRASS)
+        self.mc.set_blocks((x0, self.y+1, z0),
+                           (x0, self.y+1, z1),
+                           block.COBBLESTONE_WALL)
+        self.mc.set_blocks((x0, self.y+1, z1),
+                           (x1, self.y+1, z1),
+                           block.COBBLESTONE_WALL)
+        self.mc.set_blocks((x1, self.y+1, z0),
+                           (x1, self.y+1, z1),
+                           block.COBBLESTONE_WALL)
+        self.mc.set_blocks((x0, self.y+1, z0),
+                           (x1, self.y+1, z0),
+                           block.COBBLESTONE_WALL)
+
+        # Torches on the cobblestone wall
+        #
+        for i in range(0, outer_border+2, 4):
+            self.mc.set_block((x0, self.y+2, z0+i), block.TORCH)
+            self.mc.set_block((x0+i, self.y+2, z1), block.TORCH)
+            self.mc.set_block((x1, self.y+2, z0+i), block.TORCH)
+            self.mc.set_block((x0+i, self.y+2, z0), block.TORCH)
+
+        self.mc.set_block((x0, self.y+1, self.z),
+                          block.FENCE_GATE.withData(1))
         # Create water moat
         #
-        self.mc.set_blocks((x0, self.y, z0), (x1, self.y, z1), block.WATER)
+        # self.mc.set_blocks((x0+1, self.y-1, z0+1),
+        #                    (x0+2, self.y-1, z0+1), block.WATER)
+        # self.mc.set_blocks((x0+1, self.y-1, z0+1),
+        #                    (x0+1, self.y-1, z0+1), block.WATER)
+        # self.mc.set_blocks((x0+1, self.y-1, z0+1),
+        #                    (x0+2, self.y-1, z0+1), block.WATER)
+        # self.mc.set_blocks((x0+1, self.y-1, z0+1),
+        #                    (x0+2, self.y-1, z0+1), block.WATER)
 
-        # Create island inside moat
+        # Create island inside moat .. do not need this since we
+        # already set it up above.
         #
-        self.mc.set_blocks((xi0, self.y, zi0), (xi1, self.y, zi1),
-                           block.GRASS)
+        # self.mc.set_blocks((xi0, self.y, zi0), (xi1, self.y, zi1),
+        #                    block.GRASS)
 
     ####################################################################
     #
@@ -203,6 +250,7 @@ class CastleBuilder(object):
         # Create a keep with a specified number
         # of floors levels and a roof
         height = (levels * self.floor_height) + 4
+        top_floor_y = levels * self.floor_height
 
         self.CreateWalls(size, height, block.BRICK_BLOCK, block.FENCE,
                          True, True)
@@ -229,11 +277,42 @@ class CastleBuilder(object):
 
         # Create ladder...
         self.mc.set_blocks((x0+1, self.y+1, z0+1),
-                           (x0+1, (levels * self.floor_height)+self.y, z0+1),
+                           (x0+1, ((levels+1) * self.floor_height)+self.y,
+                            z0+1),
                            block.AIR)
         self.mc.set_blocks((x0+1, self.y+1, z0+1),
-                           (x0+1, (levels * self.floor_height)+self.y, z0+1),
+                           (x0+1, ((levels+1) * self.floor_height)+self.y,
+                            z0+1),
                            block.LADDER.withData(3))
+
+        # Bed
+        #
+        bedroom = level - 1
+        bed_x = self.x
+        bed_y = bedroom * self.floor_height + self.y + 1
+        bed_z = z1 - 3
+        self.mc.set_block((bed_x, bed_y, bed_z), block.BED.withData(3))
+
+        # crafting block
+        #
+        self.mc.set_block((x0+2, bed_y, z1-2), block.CRAFTING_TABLE)
+
+        # Furnace
+        #
+        self.mc.set_block((x0+2, bed_y, z1-3), block.FURNACE)
+
+        # Chest
+        #
+        self.mc.set_blocks((x0+2, bed_y, z1-5),
+                           (x0+2, bed_y, z1-6),
+                           block.CHEST)
+
+        # Doors
+        #
+        self.mc.set_blocks((x0, self.y+1, z1-1),
+                           (x0, self.y+2, z1-1), block.AIR)
+        self.mc.set_block((x0, self.y+1, z1-1), block.WOODEN_DOOR.withData(0))
+        self.mc.set_block((x0, self.y+2, z1-1), block.WOODEN_DOOR.withData(8))
 
         # # Door
         # self.mc.set_blocks((0, baseheight + 1, size),
@@ -269,13 +348,14 @@ class CastleBuilder(object):
         """
         hsize = size/2
         qsize = size/4
+        (x, y, z) = coords
+        y += (self.floor_height - 1)  # move the torches off of the ground
         x = coords[0]
         z = coords[2]
-        x0 = round(coords[0] - hsize) + 1
-        z0 = round(coords[2] - hsize) + 1
-        x1 = round(coords[0] + hsize) - 1
-        z1 = round(coords[2] + hsize) - 1
-        y = coords[1] + 3
+        x0 = round(x - hsize) + 1
+        z0 = round(z - hsize) + 1
+        x1 = round(x + hsize) - 1
+        z1 = round(z + hsize) - 1
 
         self.mc.set_block((x0, y, z+qsize), block.TORCH)
         self.mc.set_block((x0, y, z-qsize), block.TORCH)
@@ -307,12 +387,22 @@ def main():
     # coords = (-499, 73, -655)
     # coords = (560, 64, -281)
     # coords = (966, 137, -434)
-    coords = (1264, 74, -255)
+    # coords = (1264, 74, -255)
+    # coords = (1249, 20, -290)
+    # coords = (1298, 3, -290)
+    # coords = (1501, 75, -317)
+    # coords = (1864, 80, -295)
+    # coords = (2115, 20, -257)
+    # coords = (2284, 73, -128)
+    # coords = (2682, 66, -27)
+    # coords = (3328, 63, -69)
+    coords = (3677, 63, -119)
+
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
 
     mc.say("Let's build a castle!")
 
-    cb = CastleBuilder(mc, coords)
+    cb = CastleBuilder(mc, coords, 4)
     cb.build()
 
     print "Position player on Keep's walkway"
