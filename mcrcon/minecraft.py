@@ -688,16 +688,18 @@ class Minecraft(object):
         """
         x0, y0, z0 = coords0
         x1, y1, z1 = coords1
-        width = int(abs(x0-x1))
-        height = int(abs(y0-y1))
-        depth = int(abs(z0-z1))
+        width = int(abs(x0-x1)) + 1
+        height = int(abs(y0-y1)) + 1
+        depth = int(abs(z0-z1)) + 1
 
         sv = SparseVolume(width, height, depth)
 
         for y in c_range(y0, y1):
             for z in c_range(z0, z1):
                 for x in c_range(x0, x1):
-                    sv.set((x, y, z), self.get_block((x, y, z)))
+                    sx, sy, sz = (abs(x0 - x), abs(y0 - y), abs(z0 - z))
+                    b = self.get_block((x, y, z))
+                    sv.set((sx, sy, sz), b)
         return sv
 
     ####################################################################

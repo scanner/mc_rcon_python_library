@@ -151,6 +151,11 @@ class SparseVolume(object):
               Maybe re-jigger should be a call tha the user can make when
               they believe they know when it is best to compute it.
         """
+        x, y, z = coords
+        if x >= self.width or y >= self.height or z >= self.depth:
+            raise IndexError("%s outside of SparseVolume(%d, %d, %d)" %
+                             (coords, self.width, self.height, self.depth))
+
         dst_block = self.get(coords)
         if dst_block == block:
             return
