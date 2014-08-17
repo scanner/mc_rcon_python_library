@@ -15,6 +15,7 @@ import getpass
 from mcrcon.minecraft import Minecraft
 from mcrcon import block
 
+
 #############################################################################
 #
 def main():
@@ -33,8 +34,15 @@ def main():
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
     # res = mc.set_block((-5, 73, -193), block.AIR)
     # res = mc.set_block((-5, 73, -194), block.AIR)
-    mc.set_blocks((-20, 72, -191), (-40, 72, -191), block.AIR)
-    # print "Result: %s" % res
+    # mc.set_blocks((-2, 87, -191), (-10, 87, -191), block.STONE, "replace")
+    x, y, z = (-2, 87, -191)
+    x1, y1, z1 = (-5, 80, -192)
+    res = mc.get_block((x, y, z))
+    print "Block at (%d, %d, %d) is %s" % (x, y, z, res)
+
+    res = mc.get_blocks((x, y, z), (x1, y1, z1))
+    print "Blocks in (%d, %d, %d)-(%d, %d, %d): %s" % (x, y, z, x1, y1, z1,
+                                                       res)
 
     return
 

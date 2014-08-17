@@ -110,7 +110,7 @@ class SparseVolume(object):
     ####################################################################
     #
     def __init__(self, width, height, depth, hint=block.AIR,
-                 rejigger=False):
+                 rejigger=True):
         """
 
         hint - a suggestion of what to use as the initial 'most common block'
@@ -357,7 +357,7 @@ def test():
         talking to a minecraft server.. however making sure sparse volumes
         work right is important and self contained.
     """
-    sv = SparseVolume(5, 5, 5, rejigger=True)
+    sv = SparseVolume(5, 5, 5)
     assert(sv.size == 125)
     assert(sv.block_counts[block.AIR] == 125)
     sv.set((0, 0, 0), block.STONE)

@@ -15,6 +15,20 @@ XXX we probably should separate out the data ids too (or have data ids
 # system imports
 #
 
+# In addition to the friendly name mapping some blocks are known by
+# alternate names in the server.. this hash maps those alternate names
+# to the friendly names.
+#
+# NOTE: This only maps the tile name.. we need to do other tests to
+# make sure we have the right 'data' for tested blocks.
+#
+ALTERNATE_NAMES = {
+    'Air': 'tile.air.name',
+    'Dirt': 'tile.dirt.name',
+    'Standing Sign Block': 'Sign',
+    'White Stained Clay': 'tile.clayHardenedStained.name',
+}
+
 
 ########################################################################
 ########################################################################
@@ -22,7 +36,17 @@ XXX we probably should separate out the data ids too (or have data ids
 class Block:
     """Minecraft PI block description. Can be sent to Minecraft.setBlock/s"""
 
+    # A hash of the blocks that have been defined. Key is the tuple of
+    # test id and data.
+    #
     defined_blocks = {}
+
+    # When doing testing for blocks we need to be able to look them up
+    # by their friendly name ('ish) .. because apparently the 1.7.10
+    # mc server knows 'air' by the frienly name 'tile.air.name' and
+    # dirt by tile.dirt.name, etc..
+    #
+    blocks_by_name = {}
 
     ####################################################################
     #
@@ -33,6 +57,15 @@ class Block:
         self.data_tag = data_tag
         self.id_hash = hash(self.id + ':' + str(self._data))
         self.defined_blocks[(self.id, self._data)] = self
+
+        # Be sure to establish the mapping by name back to the actual
+        # block.. as well as the alternate name mapping back to the
+        # actual block.
+        #
+        self.blocks_by_name[name] = self
+        if name in ALTERNATE_NAMES:
+            self.blocks_by_name[ALTERNATE_NAMES[name]] = self
+        return
 
     ####################################################################
     #
@@ -51,14 +84,14 @@ class Block:
     ####################################################################
     #
     @classmethod
-    def create(cls, id, data):
+    def lookup_or_create(cls, id, name, data=0):
         """
         Basically a wrapper for creating a block.. but if we already
         created one with this id & data, then return the already
         created one.
         """
         if (id, data) not in cls.defined_blocks:
-            cls(id, data)
+            cls(id, name, data=data)
         return cls.defined_blocks[(id, data)]
 
     ####################################################################
@@ -74,6 +107,16 @@ class Block:
         data --
         """
         return cls.defined_blocks[(id, data)]
+
+    ####################################################################
+    #
+    @classmethod
+    def lookup_by_name(cls, name):
+        """
+        Lookup block by its 'friendly name' (fail with key error exception
+        if it can not be found by that name)
+        """
+        return cls.blocks_by_name[name]
 
     ####################################################################
     #
@@ -135,12 +178,12 @@ DIORITE = Block('minecraft:stone', 'Diorite', data=3)
 POLISHED_DIORITE = Block('minecraft:stone', 'Polished Diorite', data=4)
 ANDESITE = Block('minecraft:stone', 'Andesite', data=5)
 POLISHED_ANDESITE = Block('minecraft:stone', 'Polished Andesite', data=6)
-GRASS = Block('minecraft:grass', 'Grass')
+GRASS = Block('minecraft:grass', 'Grass Block')
 DIRT = Block('minecraft:dirt', 'Dirt')
 COARSE_DIRT = Block('minecraft:dirt', 'Coarse Dirt', data=1)
 PODZOL = Block('minecraft:dirt', 'Podzol', data=2)
 COBBLESTONE = Block('minecraft:cobblestone', 'Cobblestone')
-PLANKS = Block('minecraft:planks', 'Oak Wood Plank')
+PLANKS = Block('minecraft:planks', 'Wooden Planks')
 SPRUCE_WOOD_PLANK = Block('minecraft:planks', 'Spruce Wood Plank', data=1)
 BIRCH_WOOD_PLANK = Block('minecraft:planks', 'Birch Wood Plank', data=2)
 JUNGLE_WOOD_PLANK = Block('minecraft:planks', 'Jungle Wood Plank', data=3)
@@ -267,9 +310,9 @@ STANDING_SIGN = Block('minecraft:standing_sign', 'Standing Sign Block')
 WOODEN_DOOR = Block('minecraft:wooden_door', 'Wooden Door Block')
 LADDER = Block('minecraft:ladder', 'Ladder')
 LADDER_N = LADDER
-LADDER_S = Block('minecraft:ladder', 'Ladder', data=1)
-LADDER_E = Block('minecraft:ladder', 'Ladder', data=2)
-LADDER_W = Block('minecraft:ladder', 'Ladder', data=3)
+LADDER_S = Block('minecraft:ladder', 'Ladder South', data=1)
+LADDER_E = Block('minecraft:ladder', 'Ladder East', data=2)
+LADDER_W = Block('minecraft:ladder', 'Ladder West', data=3)
 RAIL = Block('minecraft:rail', 'Rail')
 STONE_STAIRS = Block('minecraft:stone_stairs', 'Cobblestone Stairs')
 WALL_SIGN = Block('minecraft:wall_sign', 'Wall-mounted Sign Block')
@@ -655,7 +698,7 @@ PAINTING = Block('minecraft:painting', 'Painting')
 GOLDEN_APPLE = Block('minecraft:golden_apple', 'Golden Apple')
 ENCHANTED_GOLDEN_APPLE = Block('minecraft:golden_apple',
                                'Enchanted Golden Apple', data=1)
-SIGN = Block('minecraft:sign', 'Sign')
+# SIGN = Block('minecraft:sign', 'Sign')  # XXX replaced by Standing Sign
 WOODEN_DOOR = Block('minecraft:wooden_door', 'Wooden Door')
 BUCKET = Block('minecraft:bucket', 'Bucket')
 WATER_BUCKET = Block('minecraft:water_bucket', 'Water Bucket')

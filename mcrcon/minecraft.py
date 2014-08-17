@@ -15,6 +15,7 @@ http://minecraft.gamepedia.com/Commands
 # system imports
 #
 import math
+import re
 
 # 3rd party imports
 #
@@ -24,6 +25,7 @@ import math
 import mcrcon
 import block
 from util import flatten
+from sparsevolume import SparseVolume
 
 SURVIVAL = 'survival'
 CREATIVE = 'creative'
@@ -43,6 +45,24 @@ BLOCK_REPLACE = "replace"
 def intFloor(*args):
     return [int(math.floor(x)) for x in flatten(args)]
 
+
+####################################################################
+#
+def c_range(i, j):
+    """
+    Range the two values so we produce an inclusive range().
+    Automatically deal with i > j by stepping backwards. This
+    lets people decide if they want to build bottom up or top
+    down, etc.
+    """
+    i = int(i)
+    j = int(j)
+    if i > j:
+        for k in range(i, j-1, -1):
+            yield k
+    else:
+        for k in range(i, j+1):
+            yield k
 
 ########################################################################
 ########################################################################
@@ -85,10 +105,25 @@ class UnhandledResponse(MCException):
 ########################################################################
 ########################################################################
 #
+class UnknownBlock(MCException):
+    def __init__(self, msg):
+        super(UnknownBlock, self).__init__(
+            "Unknown block: " + msg
+        )
+
+
+########################################################################
+########################################################################
+#
 class Minecraft(object):
     """
     API interface to minecraft server via rcon
     """
+
+    # Regexps used in matching responses from the server
+    #
+    FOUND_BLOCK = re.compile("-?\d+ is ([^(]+) \(", re.IGNORECASE)
+    TESTED_DATA = re.compile("had the data value of (\d+)", re.IGNORECASE)
 
     ####################################################################
     #
@@ -469,31 +504,9 @@ class Minecraft(object):
                               replace - The old block drops neither itself
                                          nor any contents. Plays no sound.
         """
-        # Since the cuboid is inclusive from coords0 to coords1 we need to
-        # make sure the ranges we generate run the full gamut of numbers.
-        #
         x0, y0, z0 = coords0
         x1, y1, z1 = coords1
 
-        ####################################################################
-        #
-        def c_range(i, j):
-            """
-            Range the two values so we produce an inclusive range().
-            Automatically deal with i > j by stepping backwards. This
-            lets people decide if they want to build bottom up or top
-            down, etc.
-            """
-            i = int(i)
-            j = int(j)
-            if i > j:
-                for k in range(i, j-1, -1):
-                    yield k
-            else:
-                for k in range(i, j+1):
-                    yield k
-        #
-        ####################################################################
         for y in c_range(y0, y1):
             for z in c_range(z0, z1):
                 for x in c_range(x0, x1):
@@ -614,25 +627,78 @@ class Minecraft(object):
         coords     --
         """
         coords = intFloor(coords)
-        res = self.conn.send("testforblock %d %d %d %s" % (coords[0],
-                                                           coords[1],
-                                                           coords[2],
-                                                           block.AIR))
+        res = self.conn.send("testforblock %d %d %d %s" %
+                             (coords[0], coords[1], coords[2],
+                              block.AIR.command_output))
 
         if res == "Cannot test for block outside of the world":
             raise OutsideLoadedWorld("(%d,%d,%d)" % coords)
 
-        return
+        # If the block we tested for actually was there, then job done
+        #
+        if res[0:32] == "Successfully found the block at ":
+            return block.AIR
+
+        # otherwise we need to tease out what block it was, and send
+        # another query to determine what data that block has.
+        #
+        m = Minecraft.FOUND_BLOCK.search(res)
+        if m is None:
+            raise UnhandledResponse("'%s' when expecting 'The block at "
+                                    "%d,%d,%d is <something> (expected: "
+                                    "tile.air.name).'" % coords)
+        found_name = m.groups()[0]
+        try:
+            b = block.Block.lookup_by_name(found_name)
+        except KeyError:
+            raise UnknownBlock('by name "%s"' % found_name)
+
+        # We have found which block it is. Now we need to test what its data
+        # value is..
+        #
+        res = self.conn.send("testforblock %d %d %d %s" %
+                             (coords[0], coords[1], coords[2],
+                              b.command_output))
+
+        # We either get back "Successfully found the block at " or
+        # "The block at <x>,<y>,<z> had the data value of <d> (expected: 0)."
+        #
+        if res[0:32] == "Successfully found the block at ":
+            return b
+
+        m = Minecraft.TESTED_DATA.search(res)
+        if m is None:
+            raise UnhandledResponse("'%s' when expecting 'The block at "
+                                    "%d,%d,%d had the data value of <d> "
+                                    "(expected: 0).'" % coords)
+        return block.Block.lookup_or_create(b.id, found_name,
+                                            int(m.groups()[0]))
 
     ####################################################################
     #
     def get_blocks(self, coords0, coords1):
         """
+        Queries the world for the blocks in the cuboid defined by coords0,
+        coords1. Returns a SparseVolume with the results of what
+        wasfound.
+
         Keyword Arguments:
         coords0 --
         coords1 --
         """
-        return
+        x0, y0, z0 = coords0
+        x1, y1, z1 = coords1
+        width = int(abs(x0-x1))
+        height = int(abs(y0-y1))
+        depth = int(abs(z0-z1))
+
+        sv = SparseVolume(width, height, depth)
+
+        for y in c_range(y0, y1):
+            for z in c_range(z0, z1):
+                for x in c_range(x0, x1):
+                    sv.set((x, y, z), self.get_block((x, y, z)))
+        return sv
 
     ####################################################################
     #
