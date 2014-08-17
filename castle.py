@@ -52,7 +52,7 @@ class CastleBuilder(object):
     ####################################################################
     #
     def build(self):
-        # print "Create ground and moat"
+        print "Create ground and moat"
         self.CreateLandscape(33, 21)
 
         # print "Create outer walls"
@@ -64,26 +64,6 @@ class CastleBuilder(object):
 
         print "Create Keep with 5 levels"
         self.CreateKeep(9, 5)
-        return
-
-    ####################################################################
-    #
-    def PlaceBed(self):
-        return
-
-    ####################################################################
-    #
-    def PlaceFurnace(self):
-        return
-
-    ####################################################################
-    #
-    def PlaceCraftingTable(self):
-        return
-
-    ####################################################################
-    #
-    def PlaceChest(self):
         return
 
     ####################################################################
@@ -289,24 +269,24 @@ class CastleBuilder(object):
 
         # Bed
         #
-        bedroom = level - 1
-        bed_x = self.x
+        bedroom = levels - 1
+        bed_x = x1-2
         bed_y = bedroom * self.floor_height + self.y + 1
-        bed_z = z1 - 3
+        bed_z = self.z
         self.mc.set_block((bed_x, bed_y, bed_z), block.BED.withData(3))
 
         # crafting block
         #
-        self.mc.set_block((x0+2, bed_y, z1-2), block.CRAFTING_TABLE)
+        self.mc.set_block((x1-1, bed_y, z1-1), block.CRAFTING_TABLE)
 
         # Furnace
         #
-        self.mc.set_block((x0+2, bed_y, z1-3), block.FURNACE)
+        self.mc.set_block((x1-1, bed_y, z1-2), block.FURNACE)
 
         # Chest
         #
-        self.mc.set_blocks((x0+2, bed_y, z1-5),
-                           (x0+2, bed_y, z1-6),
+        self.mc.set_blocks((x1-1, bed_y, z1-3),
+                           (x1-1, bed_y, z1-4),
                            block.CHEST)
 
         # Doors
@@ -382,7 +362,8 @@ class CastleBuilder(object):
 #############################################################################
 #
 def main():
-    # coords = (-31, 70, -203)
+    coords = (-31, 70, -203)
+    # coords = (-2, 85, -191)
     # coords = (-189, 89, -120)
     # coords = (-439, 86, -47)
     # coords = (-101, 64, -380)
@@ -398,7 +379,12 @@ def main():
     # coords = (2284, 73, -128)
     # coords = (2682, 66, -27)
     # coords = (3328, 63, -69)
-    coords = (3677, 63, -119)
+    # coords = (3677, 63, -119)
+    # coords = (4339, 94, 6)
+    # coords = (5022, 63, 1.4)
+    # coords = (5108, 63, 236)
+    # coords = (5212, 63, 216)
+    # coords = (5211, 63, 281)
 
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
 
