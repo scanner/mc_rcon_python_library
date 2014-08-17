@@ -227,6 +227,8 @@ class CastleBuilder(object):
 
         self.mc.set_block((x0, self.y+1, self.z),
                           block.FENCE_GATE.withData(1))
+        self.mc.set_block((x0-1, self.y, self.z),
+                          block.STONE)
         # Create water moat
         #
         # self.mc.set_blocks((x0+1, self.y-1, z0+1),
