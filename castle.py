@@ -1,8 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+#
 # --------------------------------------
+# This based on the script, but heavily modified by Scanner
+#
 #
 #     Minecraft Python API
 #        Castle Builder
+#
 #
 # This script creates a castle complete
 # with moat and perimeter walls.
@@ -52,12 +56,12 @@ class CastleBuilder(object):
     ####################################################################
     #
     def build(self):
-        print "Create ground and moat"
-        self.CreateLandscape(33, 21)
+        # print "Create ground and moat"
+        # self.CreateLandscape(33, 21)
 
-        # print "Create outer walls"
-        self.CreateWalls(19, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
-                         True, True, True)
+        # # print "Create outer walls"
+        # self.CreateWalls(19, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
+        #                  True, True, True)
 
         # print "Create inner walls"
         # self.CreateWalls(15, 5, block.BRICK_BLOCK, True, True, True)
@@ -270,24 +274,29 @@ class CastleBuilder(object):
         # Bed
         #
         bedroom = levels - 1
-        bed_x = x1-2
+        bed_x = x0+1
         bed_y = bedroom * self.floor_height + self.y + 1
-        bed_z = self.z
-        self.mc.set_block((bed_x, bed_y, bed_z), block.BED.withData(3))
+        bed_z = z1 - 1  # self.z
+        self.mc.set_block((bed_x, bed_y, bed_z), block.BED.withData(1+8))
+        self.mc.set_block((bed_x+1, bed_y, bed_z), block.BED.withData(1))
+        print "Setting bed at (%d, %d, %d)-(%d, %d, %d)" % (bed_x, bed_y,
+                                                            bed_z, bed_x+1,
+                                                            bed_y, bed_z)
 
         # crafting block
         #
-        self.mc.set_block((x1-1, bed_y, z1-1), block.CRAFTING_TABLE)
+        self.mc.set_block((x1-1, bed_y, z1-1),
+                          block.CRAFTING_TABLE.withData(1))
 
         # Furnace
         #
-        self.mc.set_block((x1-1, bed_y, z1-2), block.FURNACE)
+        self.mc.set_block((x1-1, bed_y, z1-2), block.FURNACE.withData(1))
 
         # Chest
         #
         self.mc.set_blocks((x1-1, bed_y, z1-3),
                            (x1-1, bed_y, z1-4),
-                           block.CHEST)
+                           block.CHEST.withData(1))
 
         # Doors
         #
