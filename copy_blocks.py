@@ -32,27 +32,10 @@ def main():
 
     print "Connecting..."
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
-    # res = mc.set_block((-5, 73, -193), block.AIR)
-    # res = mc.set_block((-5, 73, -194), block.AIR)
-    # mc.set_blocks((-2, 87, -191), (-10, 87, -191), block.STONE, "replace")
-    x, y, z = (-5, 10, -192)
-    x1, y1, z1 = (-2, 50, -185)
-    res = mc.get_block((x, y, z))
-    print "Block at (%d, %d, %d) is %s" % (x, y, z, res)
+    x, y, z = (-6, 81, -198)
+    x1, y1, z1 = (2, 86, -180)
     sv = mc.get_blocks((x, y, z), (x1, y1, z1))
-    # Turn all stone blocks to air blocks.
-    #
-    for i in range(sv.width):
-        for j in range(sv.height):
-            for k in range(sv.depth):
-                b = sv.get((i, j, k))
-                if b in (block.STONE, block.DIRT, block.GRAVEL):
-                    sv.set((i, j, k), block.AIR)
-                if b == block.AIR:
-                    sv.set((i, j, k), block.STONE)
-
-    mc.set_blocks_from_sparsevolume((10, 80, -190), sv)
-
+    mc.set_blocks_from_sparsevolume((x + 20, y, z), sv)
     return
 
 ############################################################################
