@@ -56,16 +56,14 @@ class CastleBuilder(object):
     ####################################################################
     #
     def build(self):
-        # print "Create ground and moat"
+        print "Keep will be %d units tall" % self.keep_height
+        print "Clearing space"
+        # self.ClearSpace(33)
+        print "Creating landscape"
         # self.CreateLandscape(33, 21)
-
-        # # print "Create outer walls"
+        print "Create outer walls"
         # self.CreateWalls(19, 4, block.COBBLESTONE, block.COBBLESTONE_WALL,
         #                  True, True, True)
-
-        # print "Create inner walls"
-        # self.CreateWalls(15, 5, block.BRICK_BLOCK, True, True, True)
-
         print "Create Keep with 5 levels"
         self.CreateKeep(9, 5)
         return
@@ -147,15 +145,29 @@ class CastleBuilder(object):
 
     ####################################################################
     #
-    def CreateLandscape(self, outer_border=36, islandwidth=21):
+    def ClearSpace(self, size=36):
+        """
+        Clear space from the top all the way down to y+1
 
+        Keyword Arguments:
+        size -- (default 36)
+        """
         # x, z coordinates for our outer border. This is the extent of
         # what will be cleared.
         #
-        xb0 = round(self.x - (outer_border/2))
-        zb0 = round(self.z - (outer_border/2))
-        xb1 = round(self.x + (outer_border/2))
-        zb1 = round(self.z + (outer_border/2))
+        xb0 = round(self.x - (size/2))
+        zb0 = round(self.z - (size/2))
+        xb1 = round(self.x + (size/2))
+        zb1 = round(self.z + (size/2))
+
+        print "Clearing space"
+        self.mc.set_blocks((xb0, self.y+self.keep_height, zb0),
+                           (xb1, self.y+1, zb1), block.AIR)
+        return
+
+    ####################################################################
+    #
+    def CreateLandscape(self, outer_border=36, islandwidth=21):
 
         # x, z coordinates for the fence - it is 3 spaces in from the border.
         #
@@ -171,10 +183,6 @@ class CastleBuilder(object):
         # zi0 = round(self.z - (islandwidth/2))
         # xi1 = round(self.x + (islandwidth/2))
         # zi1 = round(self.z + (islandwidth/2))
-
-        print "Clearing space"
-        self.mc.set_blocks((xb0, self.y+self.keep_height, zb0),
-                           (xb1, self.y+1, zb1), block.AIR)
 
         # Set 2 layers beneath our base to grass, and then dirt.
         #
@@ -371,7 +379,7 @@ class CastleBuilder(object):
 #############################################################################
 #
 def main():
-    coords = (-31, 70, -203)
+    # coords = (-31, 70, -203)
     # coords = (-2, 85, -191)
     # coords = (-189, 89, -120)
     # coords = (-439, 86, -47)
@@ -394,6 +402,10 @@ def main():
     # coords = (5108, 63, 236)
     # coords = (5212, 63, 216)
     # coords = (5211, 63, 281)
+    # coords = (5257, 64, -47)
+    # coords = (5603+(33/2), 63, 76)
+    # coords = (5603+(33/2), 63, 76)
+    coords = (5657, 40, 76)
 
     mc = Minecraft.create('foobybooby', 'soujya.apricot.com', 25575)
 
