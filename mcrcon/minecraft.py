@@ -16,6 +16,7 @@ http://minecraft.gamepedia.com/Commands
 #
 import math
 import re
+import json
 
 # 3rd party imports
 #
@@ -63,6 +64,7 @@ def c_range(i, j):
     else:
         for k in range(i, j+1):
             yield k
+
 
 ########################################################################
 ########################################################################
@@ -307,35 +309,45 @@ class Minecraft(object):
 
     ####################################################################
     #
-    def give_player_item(self, player, item, amount=1, data=None,
-                         data_tag=None):
+    def give_player_item(self, player, item, amount=1, data_tag=None):
         """
         Keyword Arguments:
         player   --
         item     --
         amount   -- (default 1)
-        data     -- (default None)
-        data_tag -- (default None)
+        data_tag -- Specifies the data tag of the given
+                    item(s). Must be a compound NBT tag (for example,
+                    {display:{Name:Fred}}).
         """
-        return
+        if data_tag is None:
+            res = self.conn.send("give %s %s %d %s" % (player, item.id, amount,
+                                                       item.data))
+        else:
+            res = self.conn.send("give %s %s %d %s %s" % (player, item.id,
+                                                          amount, item.data,
+                                                          json.dumps(data_tag)
+                                                          ))
+        return res
 
     ####################################################################
     #
-    def kick_player(self, playe, reason=None):
+    def kick_player(self, player, reason=None):
         """
         Keyword Arguments:
-        playe  --
+        player  --
         reason -- (default None)
         """
-        return
+        if reason is not None:
+            res = self.conn.send("kick %s %s" % (player, reason))
+        else:
+            res = self.conn.send("kick %s" % player)
+        return res
 
     ####################################################################
     #
-    def kill(self):
-        """
-
-        """
-        return
+    def kill(self, player_entity):
+        res = self.conn.send("kill %s" % player_entity)
+        return res
 
     ####################################################################
     #
@@ -352,7 +364,8 @@ class Minecraft(object):
         Keyword Arguments:
         player --
         """
-        return
+        res = self.conn.send("op %s" % player)
+        return res
 
     ####################################################################
     #
@@ -361,7 +374,8 @@ class Minecraft(object):
         Keyword Arguments:
         player --
         """
-        return
+        res = self.conn.send("pardon %s" % player)
+        return res
 
     ####################################################################
     #
@@ -370,7 +384,8 @@ class Minecraft(object):
         Keyword Arguments:
         ip_address --
         """
-        return
+        res = self.conn.send("pardon %s" % ip_address)
+        return res
 
     ####################################################################
     #
@@ -383,7 +398,15 @@ class Minecraft(object):
         pitch   -- (default None)
         min_vol -- (default None)
         """
-        return
+        if min_vol is None:
+            res = self.conn.send("playsound %s %s %s %s %s %f %f" %
+                                 sound.command_output, player, vec[0], vec[1],
+                                 vec[2], pitch)
+        else:
+            res = self.conn.send("playsound %s %s %s %s %s %f %f %f" %
+                                 sound.command_output, player, vec[0], vec[1],
+                                 vec[2], pitch, min_vol)
+        return res
 
     ####################################################################
     #
