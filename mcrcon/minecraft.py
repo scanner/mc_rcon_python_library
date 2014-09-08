@@ -36,8 +36,10 @@ SCOREBOARD_PLAYERS = 'players'
 SCOREBOARD_OBJECTIVES = 'objectives'
 SCOREBOARD_TEAMS = 'teams'
 
-BLOCK_KEEP = "keep"
 BLOCK_DESTROY = "destroy"
+BLOCK_HOLLOW = "hollow"
+BLOCK_KEEP = "keep"
+BLOCK_OUTLINE = "outline"
 BLOCK_REPLACE = "replace"
 
 
@@ -177,7 +179,7 @@ class Minecraft(object):
         else:
             res = self.conn.send("ban %s %s" % (player, reason))
 
-        if res == "Could not ban player Bibble":
+        if res[0:21] == "Could not ban player ":
             raise PlayerCannotBeFound(res)
 
         return res
@@ -495,46 +497,41 @@ class Minecraft(object):
 
     ####################################################################
     #
-    def set_blocks(self, coords0, coords1, block,
-                   old_block_handling="replace"):
+    def fill(self, coords0, coords1, block, old_block_handling=BLOCK_REPLACE,
+             data_tag=None, replacement_block=None):
         """
-        Set a cuboid of blocks (x0,y0,z0),(x1,y1,z1),block
-
-        We start at x0, y0, z0 (always), doing an x/z layer at a time
-        before moving to the next y layer.
-
-        If y0 > y1 this means we build from top to bottom - which may be
-        important for erasing an existing structure by using AIR blocks.
-
-        However, if you are placing blocks that experience gravity like
-        gravel or sand you are going to want to make sure that you start
-        with y0 <= y1.. otherwise some of your blocks may fall from above
-        in to the empty space below that has not been filled yet.
-
         Keyword Arguments:
-        coords0             -- one corner of a cuboid
-        coords1             -- the other corner of a cuboid
-        block               -- the block class instance to fill with
-        old_block_handling  -- (default "replace") Specifies how to handle the
-                              block change. Must be one of:
-
-                              destroy - The old block drops both itself and
-                                         its contents (as if destroyed by a
-                                         player). Plays the appropriate block
-                                         breaking noise.
-                              keep - Only air blocks will be changed
-                                      (non-air blocks will be "kept").
-                              replace - The old block drops neither itself
-                                         nor any contents. Plays no sound.
+        coords0            --
+        coords1            --
+        block              --
+        old_block_handling -- (default REPLACE)
+        data_tag           -- (default None)
+        replacement_block  -- (default None)
         """
-        x0, y0, z0 = coords0
-        x1, y1, z1 = coords1
+        if old_block_handling is not BLOCK_REPLACE and \
+           replacement_block is not None:
+            raise ValueError("Can not specify replacement_block (%s) if "
+                             "old_block_handling is not 'REPLACE' (%s)" %
+                             (old_block_handling, replacement_block))
 
-        for y in c_range(y0, y1):
-            for z in c_range(z0, z1):
-                for x in c_range(x0, x1):
-                    self.set_block((x, y, z), block, old_block_handling)
-        return
+        if data_tag is not None and replacement_block is not None:
+            raise ValueError("Can not specify both data_tag (%s) and "
+                             "replacement_block (%s)" %
+                             (data_tag, replacement_block))
+
+        msg = "fill %d %d %d %d %d %d %s %s" % (coords0[0], coords0[1],
+                                                coords0[2], coords1[0],
+                                                coords1[1], coords1[2],
+                                                block.command_output,
+                                                old_block_handling)
+        if data_tag is not None:
+            msg += data_tag
+        if replacement_block is not None:
+            msg += replacement_block.command_output
+
+        print "Sending message: '%s'" % msg
+        res = self.conn.send(msg)
+        return res
 
     ####################################################################
     #
@@ -639,6 +636,18 @@ class Minecraft(object):
         raw_json_message --
         """
         return
+
+    ####################################################################
+    #
+    def tp(self, player, coords):
+        """
+        Keyword Arguments:
+        player --
+        coords --
+        """
+        res = self.conn.send("tp %s %d %d %d" % (player, coords[0], coords[1],
+                                                 coords[2]))
+        return res
 
     ####################################################################
     #
