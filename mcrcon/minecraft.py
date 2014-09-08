@@ -45,7 +45,7 @@ BLOCK_REPLACE = "replace"
 
 ####################################################################
 #
-def intFloor(*args):
+def int_floor(*args):
     return [int(math.floor(x)) for x in flatten(args)]
 
 
@@ -481,7 +481,7 @@ class Minecraft(object):
                               replace - The old block drops neither itself
                                          nor any contents. Plays no sound.
         """
-        coords = intFloor(coords)
+        coords = int_floor(coords)
         res = self.conn.send("setblock %d %d %d %s" % (coords[0],
                                                        coords[1],
                                                        coords[2],
@@ -498,7 +498,7 @@ class Minecraft(object):
     ####################################################################
     #
     def fill(self, coords0, coords1, block, old_block_handling=BLOCK_REPLACE,
-             data_tag=None, replacement_block=None):
+             data_tag=None, replacement_block=None, relative=False):
         """
         Keyword Arguments:
         coords0            --
@@ -507,6 +507,11 @@ class Minecraft(object):
         old_block_handling -- (default REPLACE)
         data_tag           -- (default None)
         replacement_block  -- (default None)
+        relative           -- (default False) If specified than the second set
+                              of coords are not an absolute x,y,z
+                              position, but are instead width(x),
+                              height(y), depth(z) and must be positive,
+                              non-zero values
         """
         if old_block_handling is not BLOCK_REPLACE and \
            replacement_block is not None:
@@ -519,9 +524,19 @@ class Minecraft(object):
                              "replacement_block (%s)" %
                              (data_tag, replacement_block))
 
-        msg = "fill %d %d %d %d %d %d %s %s" % (coords0[0], coords0[1],
-                                                coords0[2], coords1[0],
-                                                coords1[1], coords1[2],
+        x0, y0, z0 = int_floor(coords0)
+        x1, y1, z1 = int_floor(coords1)
+        if relative:
+            if x1 < 1 or y1 < 1 or z1 < 1:
+                raise ValueError("Realtive coordinates must be positive, "
+                                 "non-zero integers, not: (%s, %s, %s)" %
+                                 (x1, y1, z1))
+            x1 += x0
+            y1 += y0
+            z1 += z0
+
+        msg = "fill %d %d %d %d %d %d %s %s" % (x0, y0, z0,
+                                                x1, y1, z1,
                                                 block.command_output,
                                                 old_block_handling)
         if data_tag is not None:
@@ -658,7 +673,7 @@ class Minecraft(object):
         Keyword Arguments:
         coords     --
         """
-        coords = intFloor(coords)
+        coords = int_floor(coords)
         res = self.conn.send("testforblock %d %d %d %s" %
                              (coords[0], coords[1], coords[2],
                               block.AIR.command_output))
